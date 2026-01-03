@@ -8,6 +8,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-EXPOSE 5000
+# Cloud Run defaults to port 8080
+EXPOSE 8080
 
 CMD ["npm", "start"]
