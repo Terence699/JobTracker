@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,8 @@ import { ArrowRight, BarChart3, Columns3 } from "lucide-react";
 
 export function LandingPage() {
   const { t } = useTranslation();
+  const { isLoaded, isSignedIn } = useAuth();
+  const authed = isLoaded && isSignedIn;
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -23,27 +25,29 @@ export function LandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <SignedOut>
-              <Button asChild size="lg" className="h-12 px-8 text-lg rounded-full">
-                <Link to="/sign-in">
-                  {t("landing.ctaLogin")} <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 px-8 text-lg rounded-full">
-                <a href="#features">{t("landing.ctaSeeFeatures")}</a>
-              </Button>
-            </SignedOut>
-
-            <SignedIn>
-              <Button asChild size="lg" className="h-12 px-8 text-lg rounded-full">
-                <Link to="/kanban">
-                  {t("landing.ctaOpenApp")} <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 px-8 text-lg rounded-full">
-                <Link to="/analytics">{t("landing.ctaViewAnalytics")}</Link>
-              </Button>
-            </SignedIn>
+            {authed ? (
+              <>
+                <Button asChild size="lg" className="h-12 px-8 text-lg rounded-full">
+                  <Link to="/kanban">
+                    {t("landing.ctaOpenApp")} <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-12 px-8 text-lg rounded-full">
+                  <Link to="/analytics">{t("landing.ctaViewAnalytics")}</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg" className="h-12 px-8 text-lg rounded-full">
+                  <Link to="/sign-in">
+                    {t("landing.ctaLogin")} <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="h-12 px-8 text-lg rounded-full">
+                  <a href="#features">{t("landing.ctaSeeFeatures")}</a>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>
