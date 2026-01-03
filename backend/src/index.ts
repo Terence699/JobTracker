@@ -26,6 +26,6 @@ app.get('/', (req, res) => {
 app.use('/api/jobs', requireAuth, jobRoutes);
 app.use('/api/analytics', requireAuth, analyticsRoutes);
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
