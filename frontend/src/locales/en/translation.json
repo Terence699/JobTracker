@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "kanban": "Kanban",
+    "analytics": "Analytics",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search"
+  },
+  "job": {
+    "position": "Position",
+    "company": "Company",
+    "jobUrl": "Job URL",
+    "notes": "Notes",
+    "deleteConfirmTitle": "Are you sure?",
+    "deleteConfirmDesc": "This action cannot be undone. This will permanently delete this job application."
+  },
+  "status": {
+    "applied": "Applied",
+    "interviewing": "Interviewing",
+    "offer": "Offer",
+    "rejected": "Rejected"
+  },
+  "landing": {
+    "heroTitle": "Track your job hunt with clarity",
+    "heroSubtitle": "A lightweight job-application CRM with Kanban, notes, reminders, and analytics — built for students and job seekers.",
+    "ctaLogin": "Log in to start",
+    "ctaSeeFeatures": "See features",
+    "ctaOpenApp": "Open Kanban",
+    "ctaViewAnalytics": "View analytics",
+    "featuresTitle": "Everything you need in one place",
+    "featuresSubtitle": "From applications to follow-ups, keep your pipeline moving.",
+    "featureKanbanTitle": "Kanban board",
+    "featureKanbanDesc": "Drag & drop applications across stages like Applied → Interviewing → Offer → Rejected.",
+    "featureAnalyticsTitle": "Analytics",
+    "featureAnalyticsDesc": "See response rate and status distribution at a glance.",
+    "featureRemindersTitle": "Reminders",
+    "featureRemindersDesc": "Set follow-ups and get email + in-app notifications.",
+    "featureBilingualTitle": "Bilingual",
+    "featureBilingualDesc": "Chinese & English UI with one-click switching."
+  }
+}
