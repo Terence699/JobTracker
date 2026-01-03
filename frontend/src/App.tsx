@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const queryClient = new QueryClient();
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const CLERK_PROXY_URL = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
 
 if (!PUBLISHABLE_KEY) {
   console.error("Missing Publishable Key");
@@ -22,6 +23,7 @@ function App() {
   return (
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
+      {...(CLERK_PROXY_URL ? { proxyUrl: CLERK_PROXY_URL } : {})}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/kanban"
