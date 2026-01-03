@@ -245,14 +245,6 @@ npm run build
 - `VITE_CLERK_PUBLISHABLE_KEY` - Clerk 前端公钥
 - `VITE_API_URL` - 后端 API URL
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
-
-ISC
-
 ## 👤 作者
 
 Yifu Yuan
