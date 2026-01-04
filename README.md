@@ -8,7 +8,6 @@
 - 📝 **职位管理** - 记录公司信息、职位描述、薪资、地点等详细信息
 - 📅 **面试记录** - 追踪面试时间、类型、笔记和反馈
 - 📊 **数据分析** - 可视化投递回复率、面试转化率、投递趋势等关键指标
-- 🔔 **双重提醒** - 邮件提醒 + 应用内通知，不错过重要事项
 - 🌐 **双语支持** - 完整的中英文界面切换
 - 🎨 **主题切换** - 支持深色/浅色主题
 
@@ -138,6 +137,40 @@ npm run dev
 
 前端将在 `http://localhost:5173` 运行，后端在 `http://localhost:5000` 运行。
 
+## ⚠️ 踩坑指南与解决方案 (Troubleshooting)
+
+在项目从开发环境推向生产环境（Vercel + Cloud Run）的过程中，我们遇到并解决了一系列经典问题。以下是经验总结，供后续维护参考。
+
+### 1. Clerk 身份验证在生产环境失效 (登录页空白/400 Host Invalid)
+*   **现象**: 本地开发一切正常，部署到 Vercel 后点击登录按钮无反应，Network 请求 `/__clerk/v1/environment` 报 400 Invalid Host。
+*   **原因**: Clerk 在 Production 模式下需要严格的域名配置或 Proxy。我们最初尝试在 Vercel 配置 Rewrites 代理 `/__clerk` 到 Clerk Frontend API，但因为 Cloudflare DNS 限制 (`CNAME Cross-User Banned`) 和 Vercel Serverless Function 环境变量配置不当，导致代理失败。
+*   **解决方案 (最终采用)**:
+    *   **回退到 Clerk Development Mode (推荐)**: 对于个人项目，直接在生产环境使用 Clerk 的 Dev Mode Keys (`pk_test_...`)。这会使用 Clerk 托管的 `accounts.dev` 域名，彻底绕过 DNS 和 Proxy 配置问题，开箱即用。
+    *   **清理 Proxy 配置**: 删除了 `frontend/vercel.json` 中的 rewrites 和 `frontend/src/App.tsx` 中的 `proxyUrl` 配置，让前端直接连接 Clerk 官方 API。
+
+### 2. GCP Cloud Run 部署失败 (Container failed to start)
+*   **现象**: Cloud Run 部署后无法启动，报错 `The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable`。
+*   **原因 1 (端口不匹配)**: `Dockerfile` 中写死 `EXPOSE 5000`，但 Cloud Run 默认期望监听 `8080`。
+    *   *修复*: 修改 `Dockerfile` 为 `EXPOSE 8080`，并确保 `index.ts` 中使用 `process.env.PORT`。
+*   **原因 2 (数据库连接失败导致进程退出)**: MongoDB Atlas 默认只允许白名单 IP 访问。Cloud Run 的 IP 是动态的，连接超时导致 Node 进程直接 `process.exit(1)`，Cloud Run 以为服务挂了。
+    *   *修复*: 在 MongoDB Atlas -> Network Access 中添加 `0.0.0.0/0` (Allow from Anywhere)。
+
+### 3. DNS 解析与 CNAME 冲突
+*   **现象**: 访问 `jobtracker.top` 跳转到 Namesilo 停靠页，无法打开 Vercel 应用；配置 `clerk.jobtracker.top` CNAME 时报错 `Cross-User Banned`。
+*   **原因**:
+    *   **Root Domain**: 忘记在域名商处配置 `@` (Root) 的 A 记录指向 Vercel IP (`76.76.21.21`)。
+    *   **Clerk CNAME**: 域名托管在 Cloudflare 时，Clerk 的默认 CNAME 目标 `frontend-api.clerk.services` 会触发 Cloudflare 的跨账号安全限制。
+*   **解决方案**:
+    *   在域名商处删除旧的 Parking A 记录，添加指向 Vercel 的 A 记录。
+    *   Clerk 认证最终改用 Dev Mode 托管域名，避开了 CNAME 配置。
+
+### 4. Vercel 环境变量配置错误
+*   **现象**: 部署后功能异常，或者后端无法连接。
+*   **教训**:
+    *   **不要**在 Vercel 环境变量中给 `CLERK_SECRET_KEY` 加 `VITE_` 前缀，这会导致后端/Serverless Function 读不到 key，且可能泄露给前端。
+    *   前端用的变量必须带 `VITE_`，后端用的（如 Secret Key）绝对不能带。
+    *   修改环境变量后，必须 **Redeploy** 才会生效。
+
 ## 📚 API 文档
 
 ### 职位管理 (`/api/jobs`)
@@ -154,39 +187,6 @@ npm run dev
 - `GET /api/analytics/stats` - 获取统计数据（回复率、转化率等）
 
 所有 API 端点都需要通过 Clerk 认证。
-
-## 🗄️ 数据模型
-
-### Job Schema
-
-```typescript
-{
-  userId: string;              // Clerk 用户 ID
-  companyName: string;         // 公司名称
-  position: string;            // 职位名称
-  jobUrl?: string;             // 职位链接
-  jobDescription?: string;     // 职位描述
-  status: "applied" | "interviewing" | "offer" | "rejected";
-  appliedDate: Date;           // 投递日期
-  salary?: string;             // 薪资
-  location?: string;           // 地点
-  contactInfo?: {              // HR 联系方式
-    hrName?: string;
-    hrEmail?: string;
-    hrPhone?: string;
-  };
-  interviews?: [{              // 面试记录
-    date: Date;
-    type: string;
-    notes?: string;
-    feedback?: string;
-  }];
-  notes?: string;              // 备注
-  tags?: string[];            // 标签
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
 
 ## 🌍 国际化
 
@@ -226,24 +226,6 @@ npm run build
 ```
 
 编译后的 JavaScript 文件在 `backend/dist` 目录。
-
-## 🔒 环境变量说明
-
-### 后端必需变量
-
-- `MONGODB_URI` - MongoDB 连接字符串
-- `CLERK_SECRET_KEY` - Clerk 后端密钥
-- `FRONTEND_URL` - 前端 URL（用于 CORS）
-
-### 后端可选变量
-
-- `RESEND_API_KEY` - Resend API 密钥（用于邮件提醒功能）
-- `PORT` - 服务器端口（默认 5000）
-
-### 前端必需变量
-
-- `VITE_CLERK_PUBLISHABLE_KEY` - Clerk 前端公钥
-- `VITE_API_URL` - 后端 API URL
 
 ## 👤 作者
 
